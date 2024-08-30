@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "frappe"
+version = "0.1.0"
+description = "A general, light weight image utility for FRAP and SPT data."
+authors = ["DomenicN <49012578+DomenicN@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+PyQt5 = "^5.15.11"
+pyqtgraph = "^0.13.7"
+numpy = "^1.26.0"
+pandas = "^2.2.2"
+matplotlib = "^3.9.2"
+bioio = "^1.1.0"
+bioio-czi = "^1.0.1"
+bioio-nd2 = "^1.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
