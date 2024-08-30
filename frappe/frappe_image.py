@@ -1,12 +1,12 @@
-# import numpy as np
-# import pandas as pd
+
 import bioio
-from time import time
-from frappe.utilities.reader_utilities import timed_function
+# from time import time
+# from frappe.utilities.reader_utilities import timed_function
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QTreeWidgetItem
 from pyqtgraph import colormap
 import numpy as np
+import xml.etree.ElementTree as ET
 
 
 class FrappeImage(QtCore.QObject):
@@ -179,6 +179,14 @@ class FrappeImage(QtCore.QObject):
 
     def reset_autorange(self):
         self.refresh_image_view(reset_autorange=True)
+
+    def get_metadata_tree(self):
+        if self.current_image is None:
+            empty_tree = ET.Element(None)
+            return empty_tree
+
+        else:
+            return self.current_image.metadata
 
     def initialize_viewer(self, roi_button=False, menu_button=False):
         if roi_button:

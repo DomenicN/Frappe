@@ -6,8 +6,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QKeySequence
 from pyqtgraph import colormap, ColorMap
 
-from frappe_image import FrappeImage
-from pyuic5_output.main_window import Ui_MainWindow
+from frappe.frappe_image import FrappeImage
+from frappe.pyuic5_output.main_window import Ui_MainWindow
+from frappe.dialogs import metadata_dialog
 
 
 AVAILABLE_COLORMAPS = (["Gray", "Red", "Green", "Blue", "Cyan", "Magenta",
@@ -50,6 +51,7 @@ class Window(QMainWindow):
 
     def connect_actions(self):
         self.ui.actionOpen.triggered.connect(self.open_file_dialog)
+        self.ui.actionShowMetadata.triggered.connect(self.open_metadata_dialog)
 
         # keyboard shortcuts for sliders
         self.action_frame_forward_slow = QShortcut(QKeySequence("Right"), self)
@@ -192,6 +194,11 @@ class Window(QMainWindow):
         else:
             self.ui.cursor_label.hide()
             self.ui.reset_view.hide()
+
+    def open_metadata_dialog(self):
+        dialog = metadata_dialog.MetadataDialog(
+            self.frappe_image.get_metadata_tree())
+        dialog.exec()
 
     def about(self):
         QMessageBox.about(
