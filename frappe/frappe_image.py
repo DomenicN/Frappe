@@ -160,7 +160,8 @@ class FrappeImage(QtCore.QObject):
         self.file_path = image_path
         self.fetch_image(image_path)
 
-        self.T, self.C, self.Z = 0, 0, 0
+        self._T, self._C, self._Z = 0, 0, 0
+        self.refresh_image_view()
 
     def fetch_image(self, image_path):
         self.current_image = bioio.BioImage(image_path)
