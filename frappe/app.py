@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QMessageBox, QFileDialog, QShortcut
+    QApplication, QMainWindow, QMessageBox, QFileDialog, QShortcut, QHeaderView
     )
 from PyQt5.QtGui import QKeySequence
 from pyqtgraph import colormap, ColorMap
@@ -48,6 +48,9 @@ class Window(QMainWindow):
         self.ui.frame_slider.label = "Frame"
         self.hide_and_show_sliders()
         self.ui.lookup_table_list.addItems(AVAILABLE_COLORMAPS[0])
+        self.ui.info_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeToContents
+        )
 
     def connect_actions(self):
         self.ui.actionOpen.triggered.connect(self.open_file_dialog)
@@ -162,6 +165,7 @@ class Window(QMainWindow):
             parent=self, caption="Open file",
             filter="Image files (*.czi);;Acquisition block (*.czmbi)")
         self.frappe_image.open_file(filename)
+        self.frappe_image.populate_metadata_table(self.ui.info_table)
 
         self.hide_and_show_sliders()
 

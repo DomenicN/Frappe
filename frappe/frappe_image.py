@@ -3,7 +3,7 @@ import bioio
 # from time import time
 # from frappe.utilities.reader_utilities import timed_function
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.QtWidgets import QTableWidgetItem
 from pyqtgraph import colormap
 import numpy as np
 import xml.etree.ElementTree as ET
@@ -16,6 +16,7 @@ class FrappeImage(QtCore.QObject):
         self.image_viewer = None
         self.cursor_label = None
         self.current_image = None
+        self.file_path = None
         self._T = 0
         self._Z = 0
         self._C = 0
@@ -156,6 +157,7 @@ class FrappeImage(QtCore.QObject):
         self.cursor_label = None
 
     def open_file(self, image_path):
+        self.file_path = image_path
         self.fetch_image(image_path)
 
         self.T, self.C, self.Z = 0, 0, 0
@@ -209,3 +211,26 @@ class FrappeImage(QtCore.QObject):
 
         else:
             self.image_viewer.ui.histogram.hide()
+
+    def populate_metadata_table(self, metadata_table):
+        properties = ["File path:",
+                      "Image dims (TCZYX):",
+                      "Channels:",
+                      "Pixel size (x):",
+                      "Pixel size (y):"]
+        values = [self.file_path,
+                  str(self.current_image.shape),
+                  ", ".join(self.current_image.channel_names),
+                  str(self.current_image.physical_pixel_sizes.X),
+                  str(self.current_image.physical_pixel_sizes.Y)]
+
+        if self.current_image.physical_pixel_sizes.Z is not None:
+            properties.append("Pixel size (z):")
+            values.append(str(self.current_image.physical_pixel_sizes.Z))
+
+        metadata_table.setRowCount(len(properties))
+
+        for i, p_v in enumerate(zip(properties, values)):
+            prop, value = p_v
+            metadata_table.setItem(i, 0, QTableWidgetItem(prop))
+            metadata_table.setItem(i, 1, QTableWidgetItem(value))
