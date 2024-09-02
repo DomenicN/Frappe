@@ -167,12 +167,14 @@ class FrappeImage(QtCore.QObject):
         if scale_hist or self.autoscale:
             self.image_viewer.setImage(self.current_image.get_image_data(
                 "XY", T=self.T, C=self.C, Z=self.Z),
-                autoRange=reset_autorange)
+                autoRange=reset_autorange,
+                autoLevels=self.autoscale)
         else:
             self.image_viewer.setImage(self.current_image.get_image_data(
                 "XY", T=self.T, C=self.C, Z=self.Z),
                 autoHistogramRange=False,
-                autoRange=reset_autorange)
+                autoRange=reset_autorange,
+                autoLevels=self.autoscale)
         self.image_viewer.setColorMap(self._colormap)
         # update the position and value as user moves through stack
         self.mouse_move_event(self.last_mouse_pos)
