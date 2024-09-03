@@ -136,8 +136,13 @@ class FrappeImage(QtCore.QObject):
             else:
                 image_value = 0
 
+            physical_x = x_y_values[0] * \
+                self.current_image.physical_pixel_sizes.X
+            physical_y = x_y_values[1] * \
+                self.current_image.physical_pixel_sizes.Y
             self.cursor_label.setText(
-                f"x: {x_y_values[0]:.2f}, y: {x_y_values[1]:.2f}, "
+                f"x: {x_y_values[0]:.2f}/{physical_x:.2f}, "
+                f"y: {x_y_values[1]:.2f}/{physical_y:.2f}, "
                 f"value: {image_value}")
 
     def add_viewport(self, image_viewer, cursor_label):
