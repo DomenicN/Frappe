@@ -3,8 +3,8 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QMessageBox, QFileDialog, QShortcut, QHeaderView
     )
-from PyQt5.QtGui import QKeySequence
-from pyqtgraph import colormap, ColorMap
+from PyQt5.QtGui import QKeySequence, QDoubleValidator
+from pyqtgraph import colormap, ColorMap, siFormat
 
 from frappe.frappe_image import FrappeImage
 from frappe.pyuic5_output.main_window import Ui_MainWindow
@@ -35,6 +35,11 @@ class Window(QMainWindow):
         self.setup_image_viewer()
         self.connect_actions()
         self.connect_signals_and_slots()
+
+        # allow only positive real numbers for line edit
+        only_float = QDoubleValidator()
+        only_float.setRange(0, 1000000)
+        self.ui.bar_length.setValidator(only_float)
 
     def setup_image_viewer(self):
         # set default state of the viewer
@@ -132,6 +137,10 @@ class Window(QMainWindow):
                                    "invert_colormap", invert > 0)
         )
 
+        self.ui.show_scale_bar.stateChanged['int'].connect(
+            lambda refresh: self.refresh_scale_bar(refresh > 0)
+        )
+
         # buttons
         self.ui.reset_view.clicked['bool'].connect(
             self.frappe_image.reset_autorange
@@ -160,6 +169,11 @@ class Window(QMainWindow):
             lambda c: setattr(self.frappe_image, "C", c - 1)
         )
 
+        # text line
+        self.ui.bar_length.textChanged.connect(
+            lambda: self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
+        )
+
     def open_file_dialog(self):
         filename, _ = QFileDialog.getOpenFileName(
             parent=self, caption="Open file",
@@ -168,6 +182,7 @@ class Window(QMainWindow):
         self.frappe_image.populate_metadata_table(self.ui.info_table)
 
         self.hide_and_show_sliders()
+        self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
 
     def hide_and_show_sliders(self):
         # show relevant sliders
@@ -203,6 +218,23 @@ class Window(QMainWindow):
         dialog = metadata_dialog.MetadataDialog(
             self.frappe_image.get_metadata_tree())
         dialog.exec()
+
+    def refresh_scale_bar(self, refresh):
+        self.ui.bar_length.setEnabled(refresh)
+        if (refresh and self.frappe_image.current_image is not None and
+                len(self.ui.bar_length.text()) > 0):
+            pixel_size_x = \
+                self.frappe_image.current_image.physical_pixel_sizes.X
+            self.frappe_image.scale_bar.size = \
+                float(self.ui.bar_length.text()) / pixel_size_x
+            self.frappe_image.scale_bar.text.setText(
+                siFormat(float(self.ui.bar_length.text()), suffix="µm")
+                )
+            self.frappe_image.scale_bar.show()
+            self.frappe_image.scale_bar.updateBar()
+
+        else:
+            self.frappe_image.scale_bar.hide()
 
     def about(self):
         QMessageBox.about(

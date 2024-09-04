@@ -4,7 +4,7 @@ import bioio
 # from frappe.utilities.reader_utilities import timed_function
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTableWidgetItem
-from pyqtgraph import colormap
+from pyqtgraph import colormap, ScaleBar, mkBrush, mkPen
 import numpy as np
 import xml.etree.ElementTree as ET
 
@@ -17,6 +17,10 @@ class FrappeImage(QtCore.QObject):
         self.cursor_label = None
         self.current_image = None
         self.file_path = None
+        self.scale_bar = ScaleBar(size=10, width=5, suffix="µm",
+                                  brush=mkBrush(255, 255, 255, 255),
+                                  pen=mkPen(color=(0, 0, 0)),
+                                  offset=(-25, -25))
         self._T = 0
         self._Z = 0
         self._C = 0
@@ -168,6 +172,7 @@ class FrappeImage(QtCore.QObject):
 
         self._T, self._C, self._Z = 0, 0, 0
         self.refresh_image_view()
+        self.scale_bar.setParentItem(self.image_viewer.getView())
 
     def fetch_image(self, image_path):
         self.current_image = bioio.BioImage(image_path)
