@@ -11,3 +11,14 @@ def timed_function(refresh_time):
 
         return wrapper
     return decorator
+
+
+def statusbar_message(message):
+    def decorator(function):
+        def wrapper(self):
+            self.ui.statusbar.showMessage(message)
+            function(self)
+            self.ui.statusbar.clearMessage()
+
+        return wrapper
+    return decorator

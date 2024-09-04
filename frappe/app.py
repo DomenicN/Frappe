@@ -9,6 +9,7 @@ from pyqtgraph import colormap, ColorMap, siFormat
 from frappe.frappe_image import FrappeImage
 from frappe.pyuic5_output.main_window import Ui_MainWindow
 from frappe.dialogs import metadata_dialog
+from frappe.utilities.reader_utilities import statusbar_message
 
 
 AVAILABLE_COLORMAPS = (["Gray", "Red", "Green", "Blue", "Cyan", "Magenta",
@@ -41,6 +42,7 @@ class Window(QMainWindow):
         only_float.setRange(0, 1000000)
         self.ui.bar_length.setValidator(only_float)
 
+    @statusbar_message("Initializing image viewer...")
     def setup_image_viewer(self):
         # set default state of the viewer
         self.frappe_image = FrappeImage()
@@ -174,6 +176,7 @@ class Window(QMainWindow):
             lambda: self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
         )
 
+    @statusbar_message("Opening file...")
     def open_file_dialog(self):
         filename, _ = QFileDialog.getOpenFileName(
             parent=self, caption="Open file",
@@ -214,6 +217,7 @@ class Window(QMainWindow):
             self.ui.cursor_label.hide()
             self.ui.reset_view.hide()
 
+    @statusbar_message("Reading metadata...")
     def open_metadata_dialog(self):
         dialog = metadata_dialog.MetadataDialog(
             self.frappe_image.get_metadata_tree())
