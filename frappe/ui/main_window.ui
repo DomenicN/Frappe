@@ -74,19 +74,17 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="cursor_label">
-         <property name="font">
-          <font>
-           <kerning>true</kerning>
-          </font>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-         <property name="text">
-          <string>x: 0, y:0, value: 0</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </item>

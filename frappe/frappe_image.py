@@ -53,8 +53,8 @@ class FrappeImage(QtCore.QObject):
         return self._Z
 
     @Z.setter
-    def Z(self, c):
-        self._Z = c
+    def Z(self, z):
+        self._Z = z
         self.refresh_image_view()
 
     @property
@@ -110,7 +110,6 @@ class FrappeImage(QtCore.QObject):
 
     def mouse_move_event(self, mouse_position):
         if self.image_viewer is not None:
-            assert self.cursor_label is not None
             # mouse_position = event.scenePos()
             self.last_mouse_pos = mouse_position
             view_rectangle = self.image_viewer.view.viewRect()
@@ -138,19 +137,11 @@ class FrappeImage(QtCore.QObject):
                         np.floor(x_y_values[0]).astype(int),
                         np.floor(x_y_values[1]).astype(int)]
 
-                physical_x = x_y_values[0] * \
-                    self.current_image.physical_pixel_sizes.X
-                physical_y = x_y_values[1] * \
-                    self.current_image.physical_pixel_sizes.Y
-                self.cursor_label.setText(
-                    f"x: {x_y_values[0]:.2f}/{physical_x:.2f}, "
-                    f"y: {x_y_values[1]:.2f}/{physical_y:.2f}, "
-                    f"value: {image_value}")
+                self.cursor_label.x = x_y_values[0]
+                self.cursor_label.y = x_y_values[1]
+                self.cursor_label.value = image_value
 
-            else:
-                image_value = 0
-
-    def add_viewport(self, image_viewer, cursor_label):
+    def add_viewport(self, image_viewer):
         self.image_viewer = image_viewer
         self.image_viewer.getHistogramWidget().sigLevelsChanged.connect(
             lambda hist: setattr(self, "levels", hist.getLevels())
@@ -160,7 +151,18 @@ class FrappeImage(QtCore.QObject):
             self.mouse_move_event
         )
 
+    def add_cursor_label(self, cursor_label):
         self.cursor_label = cursor_label
+        if self.current_image is not None:
+            self.update_cursor_label_dims()
+
+    def update_cursor_label_dims(self):
+        self.cursor_label.physical_x = \
+            self.current_image.physical_pixel_sizes.X
+        self.cursor_label.physical_y = \
+            self.current_image.physical_pixel_sizes.Y
+        self.cursor_label.physical_z = \
+            self.current_image.physical_pixel_sizes.Z
 
     def remove_viewport(self):
         self.image_viewer = None
@@ -169,6 +171,7 @@ class FrappeImage(QtCore.QObject):
     def open_file(self, image_path):
         self.file_path = image_path
         self.fetch_image(image_path)
+        self.update_cursor_label_dims()
 
         self._T, self._C, self._Z = 0, 0, 0
         self.refresh_image_view()

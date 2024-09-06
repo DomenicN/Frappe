@@ -9,6 +9,7 @@ from pyqtgraph import colormap, ColorMap, siFormat
 from frappe.frappe_image import FrappeImage
 from frappe.pyuic5_output.main_window import Ui_MainWindow
 from frappe.dialogs import metadata_dialog
+from frappe.utilities.cursor_label import CursorLabel
 from frappe.utilities.reader_utilities import statusbar_message
 
 
@@ -33,6 +34,7 @@ class Window(QMainWindow):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.cursor_label = CursorLabel(self.statusBar())
         self.setup_image_viewer()
         self.connect_actions()
         self.connect_signals_and_slots()
@@ -42,12 +44,15 @@ class Window(QMainWindow):
         only_float.setRange(0, 1000000)
         self.ui.bar_length.setValidator(only_float)
 
+        # setup status bar
+        self.setup_status_bar()
+
     @statusbar_message("Initializing image viewer...")
     def setup_image_viewer(self):
         # set default state of the viewer
         self.frappe_image = FrappeImage()
-        self.frappe_image.add_viewport(self.ui.image_viewer,
-                                       self.ui.cursor_label)
+        self.frappe_image.add_viewport(self.ui.image_viewer)
+        self.frappe_image.add_cursor_label(self.cursor_label)
         self.frappe_image.initialize_viewer(roi_button=False,
                                             menu_button=False)
         self.ui.c_slider.label = "Channel"
@@ -187,6 +192,9 @@ class Window(QMainWindow):
         self.hide_and_show_sliders()
         self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
 
+        # update cursor label
+        self.update_cursor_label()
+
     def hide_and_show_sliders(self):
         # show relevant sliders
         if self.frappe_image.has_T:
@@ -211,11 +219,31 @@ class Window(QMainWindow):
             self.ui.c_slider.hide()
 
         if self.frappe_image.current_image is not None:
-            self.ui.cursor_label.show()
             self.ui.reset_view.show()
         else:
-            self.ui.cursor_label.hide()
             self.ui.reset_view.hide()
+
+    def update_cursor_label(self):
+        if self.frappe_image.current_image is not None:
+            self.cursor_label.has_x = \
+                self.frappe_image.current_image.dims.X > 1
+            self.cursor_label.has_y = \
+                self.frappe_image.current_image.dims.Y > 1
+            self.cursor_label.has_z = \
+                self.frappe_image.current_image.dims.Z > 1
+            self.cursor_label.has_t = \
+                self.frappe_image.current_image.dims.T > 1
+            self.cursor_label.has_c = \
+                self.frappe_image.current_image.dims.C > 1
+            self.cursor_label.has_value = True
+
+        else:
+            self.cursor_label.has_none()
+
+        self.cursor_label.hide_and_show_labels()
+
+    def setup_status_bar(self):
+        self.cursor_label.setup_status_bar()
 
     @statusbar_message("Reading metadata...")
     def open_metadata_dialog(self):
