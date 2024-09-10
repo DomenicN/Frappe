@@ -7,10 +7,11 @@ from PyQt5.QtGui import QKeySequence, QDoubleValidator
 from pyqtgraph import colormap, ColorMap, siFormat
 
 from frappe.frappe_image import FrappeImage
-from frappe.pyuic5_output.main_window import Ui_MainWindow
+from frappe.frappe_tracks import FrappeTrack
+from frappe.pyuic5_output import main_window, track_viewer
 from frappe.dialogs import metadata_dialog
 from frappe.utilities.cursor_label import CursorLabel
-from frappe.utilities.reader_utilities import statusbar_message
+from frappe.utilities.decorators import statusbar_message
 
 
 AVAILABLE_COLORMAPS = (["Gray", "Red", "Green", "Blue", "Cyan", "Magenta",
@@ -32,7 +33,7 @@ AVAILABLE_COLORMAPS = (["Gray", "Red", "Green", "Blue", "Cyan", "Magenta",
 class Window(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.ui = Ui_MainWindow()
+        self.ui = main_window.Ui_MainWindow()
         self.ui.setupUi(self)
         self.cursor_label = CursorLabel(self.statusBar())
         self.setup_image_viewer()
@@ -46,6 +47,9 @@ class Window(QMainWindow):
 
         # setup status bar
         self.setup_status_bar()
+
+        # initialize track window
+        self.track_window = None
 
     @statusbar_message("Initializing image viewer...")
     def setup_image_viewer(self):
@@ -183,17 +187,28 @@ class Window(QMainWindow):
 
     @statusbar_message("Opening file...")
     def open_file_dialog(self):
-        filename, _ = QFileDialog.getOpenFileName(
+        allowed_files = ["Image files (*.czi *.czmbi)", "Track file (*.npy)"]
+        filename, file_type = QFileDialog.getOpenFileName(
             parent=self, caption="Open file",
-            filter="Image files (*.czi);;Acquisition block (*.czmbi)")
-        self.frappe_image.open_file(filename)
-        self.frappe_image.populate_metadata_table(self.ui.info_table)
+            filter=";;".join(allowed_files))
+        if filename:
+            if file_type == allowed_files[0]:
+                if self.track_window is not None:
+                    self.track_window = None
+                    self.show()
+                self.frappe_image.open_file(filename)
+                self.frappe_image.populate_metadata_table(self.ui.info_table)
 
-        self.hide_and_show_sliders()
-        self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
+                self.hide_and_show_sliders()
+                self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
 
-        # update cursor label
-        self.update_cursor_label()
+                # update cursor label
+                self.update_cursor_label()
+            elif file_type == allowed_files[1]:
+                self.track_window = TrackWindow(filename, self)
+                self.track_window.show()
+                if self.isVisible():
+                    self.hide()
 
     def hide_and_show_sliders(self):
         # show relevant sliders
@@ -277,6 +292,16 @@ class Window(QMainWindow):
             "<p>- Qt Designer</p>"
             "<p>- Python</p>",
         )
+
+
+class TrackWindow(QMainWindow):
+    def __init__(self, file, called_from, parent=None):
+        super().__init__(parent)
+        self.ui = track_viewer.Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.frappe_track = FrappeTrack()
+        self.frappe_track.open_file(file)
+        self.called_from = called_from
 
 
 if __name__ == "__main__":

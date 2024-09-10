@@ -1,7 +1,5 @@
 
 import bioio
-# from time import time
-# from frappe.utilities.reader_utilities import timed_function
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTableWidgetItem
 from pyqtgraph import colormap, ScaleBar, mkBrush, mkPen
@@ -185,7 +183,7 @@ class FrappeImage(QtCore.QObject):
             self.image_viewer.setImage(self.current_image.get_image_data(
                 "XY", T=self.T, C=self.C, Z=self.Z),
                 autoRange=reset_autorange,
-                autoLevels=self.autoscale)
+                autoLevels=True)
         else:
             self.image_viewer.setImage(self.current_image.get_image_data(
                 "XY", T=self.T, C=self.C, Z=self.Z),
