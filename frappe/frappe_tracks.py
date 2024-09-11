@@ -2,9 +2,12 @@
 import bioio
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTableWidgetItem
-from pyqtgraph import colormap, ScaleBar, mkBrush, mkPen
-import numpy as np
+from pyqtgraph import ScaleBar, mkBrush, mkPen
 import xml.etree.ElementTree as ET
+import numpy as np
+from matplotlib import pyplot as plt
+
+from frappe.utilities.reader_utilities import parse_tracks
 
 
 class FrappeTrack(QtCore.QObject):
@@ -12,54 +15,35 @@ class FrappeTrack(QtCore.QObject):
     def __init__(self) -> None:
         super().__init__()
         self.track_plot = None
-        self.current_file = None
+        self.tracks = None
         self.file_path = None
         self.scale_bar = ScaleBar(size=1, width=5, suffix="µm",
                                   brush=mkBrush(255, 255, 255, 255),
                                   pen=mkPen(color=(0, 0, 0)),
                                   offset=(-25, -25))
 
+        self.visible_ids = []
+
     def add_track_plot(self, track_plot):
         self.track_plot = track_plot
 
-    def add_cursor_label(self, cursor_label):
-        self.cursor_label = cursor_label
-        if self.current_image is not None:
-            self.update_cursor_label_dims()
-
-    def update_cursor_label_dims(self):
-        self.cursor_label.physical_x = \
-            self.current_image.physical_pixel_sizes.X
-        self.cursor_label.physical_y = \
-            self.current_image.physical_pixel_sizes.Y
-        self.cursor_label.physical_z = \
-            self.current_image.physical_pixel_sizes.Z
-
-    def remove_viewport(self):
-        self.image_viewer = None
-        self.cursor_label = None
-
     def open_file(self, track_path):
-        pass
+        self.file_path = track_path
+        self.tracks = parse_tracks(self.file_path)
+        self.visible_ids = np.unique(self.tracks["id"])
+        self.refresh_plot_view()
 
     def fetch_image(self, image_path):
         self.current_image = bioio.BioImage(image_path)
 
-    def refresh_image_view(self, scale_hist=False, reset_autorange=False):
-        if scale_hist or self.autoscale:
-            self.image_viewer.setImage(self.current_image.get_image_data(
-                "XY", T=self.T, C=self.C, Z=self.Z),
-                autoRange=reset_autorange,
-                autoLevels=True)
-        else:
-            self.image_viewer.setImage(self.current_image.get_image_data(
-                "XY", T=self.T, C=self.C, Z=self.Z),
-                autoHistogramRange=False,
-                autoRange=reset_autorange,
-                autoLevels=self.autoscale)
-        self.image_viewer.setColorMap(self._colormap)
-        # update the position and value as user moves through stack
-        self.mouse_move_event(self.last_mouse_pos)
+    def refresh_plot_view(self):
+        if self.track_plot is not None:
+            colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+            for i, id in enumerate(self.visible_ids):
+                current_df = self.tracks[self.tracks["id"] == id]
+                self.track_plot.plot(current_df["x"].to_numpy(),
+                                     current_df["y"].to_numpy(),
+                                     pen=mkPen(color=colors[i % len(colors)]))
 
     def reset_autorange(self):
         self.refresh_image_view(reset_autorange=True)

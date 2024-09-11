@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="PlotWidget" name="widget" native="true">
+   <widget class="PlotWidget" name="track_plot" native="true">
     <property name="geometry">
      <rect>
       <x>280</x>

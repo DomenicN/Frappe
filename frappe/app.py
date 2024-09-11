@@ -300,6 +300,7 @@ class TrackWindow(QMainWindow):
         self.ui = track_viewer.Ui_MainWindow()
         self.ui.setupUi(self)
         self.frappe_track = FrappeTrack()
+        self.frappe_track.add_track_plot(self.ui.track_plot)
         self.frappe_track.open_file(file)
         self.called_from = called_from
 

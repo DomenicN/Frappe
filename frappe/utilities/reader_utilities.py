@@ -7,7 +7,7 @@ def parse_tracks(tracks_path):
     # get the file extension
     file_extension = tracks_path.split(".")[-1]
 
-    if file_extension == ".npy":
+    if file_extension == "npy":
         return read_minflux_file(tracks_path)
 
 
