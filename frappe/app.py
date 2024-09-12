@@ -1,7 +1,8 @@
 import sys
 
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QMessageBox, QFileDialog, QShortcut, QHeaderView
+    QApplication, QMainWindow, QMessageBox, QFileDialog, QShortcut,
+    QHeaderView
     )
 from PyQt5.QtGui import QKeySequence, QDoubleValidator
 from pyqtgraph import colormap, ColorMap, siFormat
@@ -301,8 +302,20 @@ class TrackWindow(QMainWindow):
         self.ui.setupUi(self)
         self.frappe_track = FrappeTrack()
         self.frappe_track.add_track_plot(self.ui.track_plot)
+        self.frappe_track.add_track_table(self.ui.track_table)
         self.frappe_track.open_file(file)
         self.called_from = called_from
+        self.connect_signals_and_slots()
+
+    def connect_signals_and_slots(self):
+        # buttons
+        self.ui.play_button.clicked['bool'].connect(
+            self.frappe_track.play_track_visualization
+        )
+
+        self.ui.pause_button.clicked['bool'].connect(
+            self.frappe_track.pause_track_visualization
+        )
 
 
 if __name__ == "__main__":
