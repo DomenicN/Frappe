@@ -88,7 +88,8 @@ class FrappeTrack(QtCore.QObject):
                     self.current_tracks["id"] == id]
                 self.track_plot.plot(current_df["x"].to_numpy(),
                                      current_df["y"].to_numpy(),
-                                     pen=mkPen(color=colors[i % len(colors)]))
+                                     pen=mkPen(color=colors[
+                                         hash(id) % len(colors)]))
 
     def play_track_visualization(self, synchronize_tracks=False):
         self.plot_timer.start(FRAME_UPDATE_RATE)
