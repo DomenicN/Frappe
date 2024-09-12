@@ -8,7 +8,7 @@ from PyQt5.QtGui import QKeySequence, QDoubleValidator
 from pyqtgraph import colormap, ColorMap, siFormat
 
 from frappe.frappe_image import FrappeImage
-from frappe.frappe_tracks import FrappeTrack
+from frappe.frappe_tracks import FrappeTrack, FRAME_UPDATE_RATE
 from frappe.pyuic5_output import main_window, track_viewer
 from frappe.dialogs import metadata_dialog
 from frappe.utilities.cursor_label import CursorLabel
@@ -303,18 +303,41 @@ class TrackWindow(QMainWindow):
         self.frappe_track = FrappeTrack()
         self.frappe_track.add_track_plot(self.ui.track_plot)
         self.frappe_track.add_track_table(self.ui.track_table)
+        self.frappe_track.add_frame_rate_label(self.ui.update_rate_label)
+        self.frappe_track.add_time_label(self.ui.time_label)
         self.frappe_track.open_file(file)
+        self.ui.localizations_per_second.setText(
+            f"{self.frappe_track.frames_per_update:.0f}"
+        )
+        self.ui.localizations_to_display.setText(
+            f"{self.frappe_track.max_localizations_per_track}"
+        )
         self.called_from = called_from
         self.connect_signals_and_slots()
 
     def connect_signals_and_slots(self):
         # buttons
         self.ui.play_button.clicked['bool'].connect(
-            self.frappe_track.play_track_visualization
+            self.frappe_track.play_track
         )
 
         self.ui.pause_button.clicked['bool'].connect(
             self.frappe_track.pause_track_visualization
+        )
+
+        self.ui.reset_button.clicked['bool'].connect(
+            self.frappe_track.reset_current_chunks
+        )
+
+        # text line
+        self.ui.localizations_per_second.textChanged.connect(
+            lambda fpu: setattr(self.frappe_track,
+                                "frames_per_update", int(fpu))
+        )
+
+        self.ui.localizations_to_display.textChanged.connect(
+            lambda mlpt: setattr(self.frappe_track,
+                                 "max_localizations_per_track", int(mlpt))
         )
 
 

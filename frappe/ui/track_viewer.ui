@@ -17,8 +17,8 @@
    <widget class="PlotWidget" name="track_plot" native="true">
     <property name="geometry">
      <rect>
-      <x>280</x>
-      <y>30</y>
+      <x>270</x>
+      <y>40</y>
       <width>561</width>
       <height>371</height>
      </rect>
@@ -27,9 +27,9 @@
    <widget class="QPushButton" name="play_button">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>0</x>
       <y>10</y>
-      <width>113</width>
+      <width>91</width>
       <height>32</height>
      </rect>
     </property>
@@ -40,14 +40,14 @@
    <widget class="QPushButton" name="pause_button">
     <property name="geometry">
      <rect>
-      <x>150</x>
+      <x>90</x>
       <y>10</y>
-      <width>113</width>
+      <width>91</width>
       <height>32</height>
      </rect>
     </property>
     <property name="text">
-     <string>Pause</string>
+     <string>Stop</string>
     </property>
    </widget>
    <widget class="QTableWidget" name="track_table">
@@ -100,7 +100,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Localizations per second:</string>
+     <string>Localizations per update:</string>
     </property>
    </widget>
    <widget class="QLabel" name="localizations_to_display_label">
@@ -124,6 +124,77 @@
       <width>71</width>
       <height>21</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="update_rate_label">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>10</y>
+      <width>241</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Average update rate (1/s):</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="time_label">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>10</y>
+      <width>241</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Time (ms):</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reset_button">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>10</y>
+      <width>91</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reset</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="show_scale_bar">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>100</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show scale bar</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="bar_length">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>100</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>10</string>
+    </property>
+    <property name="readOnly">
+     <bool>false</bool>
     </property>
    </widget>
   </widget>

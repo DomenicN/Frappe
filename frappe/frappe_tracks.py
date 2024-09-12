@@ -6,10 +6,11 @@ from pyqtgraph import ScaleBar, mkBrush, mkPen
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import time
 
 from frappe.utilities.reader_utilities import parse_tracks
 
-FRAME_UPDATE_RATE = 17
+FRAME_UPDATE_RATE = 50
 
 
 class FrappeTrack(QtCore.QObject):
@@ -18,7 +19,10 @@ class FrappeTrack(QtCore.QObject):
         super().__init__()
         self.track_plot = None
         self.track_table = None
+        self.frame_rate_label = None
+        self.time_label = None
         self.tracks = None
+        self.dt = 0
         self.current_tracks = None
         self.file_path = None
         self.scale_bar = ScaleBar(size=1, width=5, suffix="µm",
@@ -30,13 +34,23 @@ class FrappeTrack(QtCore.QObject):
         self.frame_range = [-np.inf, np.inf]
         self.frames_per_update = 25
         self.max_localizations_per_track = 1000
+        self.average_update_rate = 1000 / FRAME_UPDATE_RATE
+        self._last_update_time = time.time()
+        self._play_time = 0
         self.current_chunks = {}
-
         self.track_ranges = {}
         self._max_frames = {}
 
         self.plot_timer = QTimer(self)
         self.plot_timer.timeout.connect(self.play_track_visualization)
+
+    @property
+    def localizations_per_second(self):
+        return self.average_update_rate * self.frames_per_update
+
+    @localizations_per_second.setter
+    def localizations_per_second(self, value):
+        self.frames_per_update = value / self.average_update_rate
 
     def add_track_plot(self, track_plot):
         self.track_plot = track_plot
@@ -44,19 +58,25 @@ class FrappeTrack(QtCore.QObject):
     def add_track_table(self, track_table):
         self.track_table = track_table
 
+    def add_frame_rate_label(self, label):
+        self.frame_rate_label = label
+
+    def add_time_label(self, label):
+        self.time_label = label
+
     def open_file(self, track_path):
         self.file_path = track_path
-        self.tracks = parse_tracks(self.file_path)
+        self.tracks, self.dt = parse_tracks(self.file_path)
         self.current_tracks = self.tracks.copy()
         self.visible_ids = list(np.unique(self.tracks["id"]))
         self.reset_current_chunks()
         self.setup_max_frames()
         self.setup_track_table()
         self.refresh_plot_view()
-        # self.play_track_visualization()
 
     def reset_current_chunks(self):
         if self.tracks is not None:
+            self._play_time = 0
             for track_id in np.unique(self.tracks["id"]):
                 self.current_chunks[track_id] = 0
 
@@ -92,8 +112,17 @@ class FrappeTrack(QtCore.QObject):
                                          hash(id) % len(colors)]))
 
     def play_track_visualization(self, synchronize_tracks=False):
-        self.plot_timer.start(FRAME_UPDATE_RATE)
         self.track_plot.disableAutoRange()
+
+        self.update_frame_rate()
+        self._play_time += self.dt
+
+        if self.frame_rate_label is not None:
+            self.frame_rate_label.setText(f"Average update rate (1/s): "
+                                          f"{self.average_update_rate:.2f}")
+
+        if self.time_label is not None:
+            self.time_label.setText(f"Time (ms): {1000*self._play_time:.5f}")
 
         if synchronize_tracks:
             if self.frame_range[1] > np.max(self.tracks["frame"]):
@@ -111,6 +140,18 @@ class FrappeTrack(QtCore.QObject):
                                    recalculate_tracks=True,
                                    synchronize_tracks=False,
                                    clear_existing=True)
+
+    def update_frame_rate(self):
+        self.average_update_rate -= self.average_update_rate / 50
+        # multiply by 1000 to get msecs divide by 10 for average
+        self.average_update_rate += 1 / ((time.time() - self._last_update_time)
+                                         * 50)
+        self._last_update_time = time.time()
+
+    def play_track(self):
+        self.plot_timer.start(FRAME_UPDATE_RATE)
+        self._last_update_time = time.time()
+        self._play_time = 0
 
     def pause_track_visualization(self):
         self.plot_timer.stop()

@@ -44,7 +44,7 @@ def read_minflux_file(minflux_tracks_path):
         "original_tim": tim
     })
 
-    return data
+    return data, dt
 
 
 def find_minflux_timestep(minflux_npy):
