@@ -193,6 +193,7 @@ class Window(QMainWindow):
             parent=self, caption="Open file",
             filter=";;".join(allowed_files))
         if filename:
+            self.setWindowTitle(f"Frappe - {filename}")
             if file_type == allowed_files[0]:
                 if self.track_window is not None:
                     self.track_window = None
@@ -207,6 +208,7 @@ class Window(QMainWindow):
                 self.update_cursor_label()
             elif file_type == allowed_files[1]:
                 self.track_window = TrackWindow(filename, self)
+                self.track_window.setWindowTitle(f"Frappe - {filename}")
                 self.track_window.show()
                 if self.isVisible():
                     self.hide()
