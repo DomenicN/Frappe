@@ -340,7 +340,7 @@ class TrackWindow(QMainWindow):
         )
 
         self.ui.reset_button.clicked['bool'].connect(
-            self.frappe_track.reset_current_chunks
+            self.frappe_track.reset
         )
 
         # text line

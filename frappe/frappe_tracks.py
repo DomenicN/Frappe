@@ -75,11 +75,25 @@ class FrappeTrack(QtCore.QObject):
         self.refresh_plot_view()
         self.scale_bar.setParentItem(self.track_plot.plotItem.getViewBox())
 
+    def reset(self):
+        self.reset_current_chunks()
+        self.refresh_plot_view(recalculate_tracks=True,
+                               clear_existing=True)
+        self.refresh_labels()
+
     def reset_current_chunks(self):
         if self.tracks is not None:
             self._play_time = 0
             for track_id in np.unique(self.tracks["id"]):
                 self.current_chunks[track_id] = 0
+
+    def refresh_labels(self):
+        if self.frame_rate_label is not None:
+            self.frame_rate_label.setText(f"Average update rate (1/s): "
+                                          f"{self.average_update_rate:.2f}")
+
+        if self.time_label is not None:
+            self.time_label.setText(f"Time (ms): {1000*self._play_time:.5f}")
 
     def setup_max_frames(self):
         if self.tracks is not None:
@@ -118,12 +132,7 @@ class FrappeTrack(QtCore.QObject):
         self.update_frame_rate()
         self._play_time += self.dt
 
-        if self.frame_rate_label is not None:
-            self.frame_rate_label.setText(f"Average update rate (1/s): "
-                                          f"{self.average_update_rate:.2f}")
-
-        if self.time_label is not None:
-            self.time_label.setText(f"Time (ms): {1000*self._play_time:.5f}")
+        self.refresh_labels()
 
         if synchronize_tracks:
             if self.frame_range[1] > np.max(self.tracks["frame"]):
