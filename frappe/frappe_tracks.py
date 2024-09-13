@@ -73,6 +73,7 @@ class FrappeTrack(QtCore.QObject):
         self.setup_max_frames()
         self.setup_track_table()
         self.refresh_plot_view()
+        self.scale_bar.setParentItem(self.track_plot.plotItem.getViewBox())
 
     def reset_current_chunks(self):
         if self.tracks is not None:

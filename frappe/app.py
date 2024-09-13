@@ -4,11 +4,11 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QMessageBox, QFileDialog, QShortcut,
     QHeaderView
     )
-from PyQt5.QtGui import QKeySequence, QDoubleValidator
+from PyQt5.QtGui import QKeySequence, QDoubleValidator, QIntValidator
 from pyqtgraph import colormap, ColorMap, siFormat
 
 from frappe.frappe_image import FrappeImage
-from frappe.frappe_tracks import FrappeTrack, FRAME_UPDATE_RATE
+from frappe.frappe_tracks import FrappeTrack
 from frappe.pyuic5_output import main_window, track_viewer
 from frappe.dialogs import metadata_dialog
 from frappe.utilities.cursor_label import CursorLabel
@@ -314,6 +314,20 @@ class TrackWindow(QMainWindow):
         )
         self.called_from = called_from
         self.connect_signals_and_slots()
+        self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
+
+        # limit text line ranges
+        self.ui.bar_length.setValidator(
+            QDoubleValidator().setRange(0, 1000000)
+        )
+
+        self.ui.localizations_per_second.setValidator(
+            QDoubleValidator().setRange(1, 1000000)
+        )
+
+        self.ui.localizations_to_display.setValidator(
+            QIntValidator().setRange(1, 10000000)
+        )
 
     def connect_signals_and_slots(self):
         # buttons
@@ -332,13 +346,36 @@ class TrackWindow(QMainWindow):
         # text line
         self.ui.localizations_per_second.textChanged.connect(
             lambda fpu: setattr(self.frappe_track,
-                                "frames_per_update", int(fpu))
+                                "frames_per_update", float(fpu))
         )
 
         self.ui.localizations_to_display.textChanged.connect(
             lambda mlpt: setattr(self.frappe_track,
                                  "max_localizations_per_track", int(mlpt))
         )
+
+        self.ui.show_scale_bar.stateChanged['int'].connect(
+            lambda refresh: self.refresh_scale_bar(refresh > 0)
+        )
+
+        self.ui.bar_length.textChanged.connect(
+            lambda: self.refresh_scale_bar(self.ui.show_scale_bar.isChecked())
+        )
+
+    def refresh_scale_bar(self, refresh):
+        self.ui.bar_length.setEnabled(refresh)
+        if (refresh and self.frappe_track.tracks is not None and
+                len(self.ui.bar_length.text()) > 0):
+            self.frappe_track.scale_bar.size = \
+                float(self.ui.bar_length.text()) / 1000000
+            self.frappe_track.scale_bar.text.setText(
+                siFormat(float(self.ui.bar_length.text()), suffix="µm")
+                )
+            self.frappe_track.scale_bar.show()
+            self.frappe_track.scale_bar.updateBar()
+
+        else:
+            self.frappe_track.scale_bar.hide()
 
 
 if __name__ == "__main__":
