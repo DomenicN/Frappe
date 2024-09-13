@@ -42,9 +42,9 @@ class Window(QMainWindow):
         self.connect_signals_and_slots()
 
         # allow only positive real numbers for line edit
-        only_float = QDoubleValidator()
-        only_float.setRange(0, 1000000)
-        self.ui.bar_length.setValidator(only_float)
+        self.ui.bar_length.setValidator(
+            QDoubleValidator().setRange(0, 1000000)
+        )
 
         # setup status bar
         self.setup_status_bar()
@@ -278,7 +278,8 @@ class Window(QMainWindow):
             self.frappe_image.scale_bar.size = \
                 float(self.ui.bar_length.text()) / pixel_size_x
             self.frappe_image.scale_bar.text.setText(
-                siFormat(float(self.ui.bar_length.text()), suffix="µm")
+                siFormat(float(self.ui.bar_length.text()) / 1000000,
+                         suffix="m")
                 )
             self.frappe_image.scale_bar.show()
             self.frappe_image.scale_bar.updateBar()
@@ -377,7 +378,8 @@ class TrackWindow(QMainWindow):
             self.frappe_track.scale_bar.size = \
                 float(self.ui.bar_length.text()) / 1000000
             self.frappe_track.scale_bar.text.setText(
-                siFormat(float(self.ui.bar_length.text()), suffix="µm")
+                siFormat(float(self.ui.bar_length.text()) / 1000000,
+                         suffix="m")
                 )
             self.frappe_track.scale_bar.show()
             self.frappe_track.scale_bar.updateBar()
