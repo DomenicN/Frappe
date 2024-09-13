@@ -17,7 +17,7 @@
    <widget class="PlotWidget" name="track_plot" native="true">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>280</x>
       <y>40</y>
       <width>561</width>
       <height>371</height>
@@ -54,9 +54,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>150</y>
+      <y>160</y>
       <width>261</width>
-      <height>271</height>
+      <height>261</height>
      </rect>
     </property>
     <column>
@@ -195,6 +195,22 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="show_labels_checkbox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>130</y>
+      <width>101</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show labels</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>

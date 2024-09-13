@@ -343,6 +343,16 @@ class TrackWindow(QMainWindow):
             self.frappe_track.reset
         )
 
+        # checkboxes
+        self.ui.show_scale_bar.stateChanged['int'].connect(
+            lambda refresh: self.refresh_scale_bar(refresh > 0)
+        )
+
+        self.ui.show_labels_checkbox.stateChanged['int'].connect(
+            lambda show: setattr(self.frappe_track,
+                                 "show_labels", show > 0)
+        )
+
         # text line
         self.ui.localizations_per_second.textChanged.connect(
             lambda fpu: setattr(self.frappe_track,
@@ -352,10 +362,6 @@ class TrackWindow(QMainWindow):
         self.ui.localizations_to_display.textChanged.connect(
             lambda mlpt: setattr(self.frappe_track,
                                  "max_localizations_per_track", int(mlpt))
-        )
-
-        self.ui.show_scale_bar.stateChanged['int'].connect(
-            lambda refresh: self.refresh_scale_bar(refresh > 0)
         )
 
         self.ui.bar_length.textChanged.connect(

@@ -2,7 +2,8 @@
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTableWidgetItem, QCheckBox, QSpinBox
 from PyQt5.QtCore import QTimer
-from pyqtgraph import ScaleBar, mkBrush, mkPen
+from PyQt5.QtGui import QFont
+from pyqtgraph import ScaleBar, TextItem, mkBrush, mkPen
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -37,6 +38,11 @@ class FrappeTrack(QtCore.QObject):
         self.average_update_rate = 1000 / FRAME_UPDATE_RATE
         self._last_update_time = time.time()
         self._play_time = 0
+        self.track_centroids = {}
+        self.track_radii_of_gyration = {}
+        self._show_labels = True
+        self.track_labels = {}
+        self.track_plot_items = {}
         self.current_chunks = {}
         self.track_ranges = {}
         self._max_frames = {}
@@ -51,6 +57,19 @@ class FrappeTrack(QtCore.QObject):
     @localizations_per_second.setter
     def localizations_per_second(self, value):
         self.frames_per_update = value / self.average_update_rate
+
+    @property
+    def show_labels(self):
+        return self._show_labels
+
+    @show_labels.setter
+    def show_labels(self, value):
+        self._show_labels = value
+        self.refresh_plot_view(recalculate_tracks=True,
+                               synchronize_tracks=False,
+                               frame_range=[-np.inf, np.inf],
+                               reset=False,
+                               clear_existing=True)
 
     def add_track_plot(self, track_plot):
         self.track_plot = track_plot
@@ -69,16 +88,42 @@ class FrappeTrack(QtCore.QObject):
         self.tracks, self.dt = parse_tracks(self.file_path)
         self.current_tracks = self.tracks.copy()
         self.visible_ids = list(np.unique(self.tracks["id"]))
+        self.calculate_track_centroids()
+        self.add_track_labels()
         self.reset_current_chunks()
         self.setup_max_frames()
         self.setup_track_table()
-        self.refresh_plot_view()
+        self.refresh_plot_view(clear_existing=True)
         self.scale_bar.setParentItem(self.track_plot.plotItem.getViewBox())
+
+    def calculate_track_centroids(self):
+        if self.tracks is not None:
+            for track_id in np.unique(self.tracks["id"]):
+                current_df = self.tracks[self.tracks["id"] == track_id]
+                self.track_centroids[track_id] = np.mean(
+                    current_df[["x", "y", "z"]].to_numpy(), axis=0
+                )
+                self.track_radii_of_gyration[track_id] = np.std(
+                    current_df[["x", "y", "z"]].to_numpy(), axis=0
+                )
+
+    def add_track_labels(self):
+        if self.tracks is not None:
+            font = QFont()
+            font.setPixelSize(9)
+            for track_id in np.unique(self.tracks["id"]):
+                self.track_labels[track_id] = TextItem(str(track_id))
+                self.track_plot.addItem(self.track_labels[track_id])
+                label_position = self.track_centroids[track_id] + \
+                    1.25 * self.track_radii_of_gyration[track_id]
+                self.track_labels[track_id].setPos(
+                    label_position[0], label_position[1]
+                )
+                self.track_labels[track_id].setFont(font)
 
     def reset(self):
         self.reset_current_chunks()
-        self.refresh_plot_view(recalculate_tracks=True,
-                               clear_existing=True)
+        self.refresh_plot_view(recalculate_tracks=True)
         self.refresh_labels()
 
     def reset_current_chunks(self):
@@ -118,13 +163,23 @@ class FrappeTrack(QtCore.QObject):
                                               reset)
 
             colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-            for i, id in enumerate(self.visible_ids):
+            for id in self.visible_ids:
                 current_df = self.current_tracks[
                     self.current_tracks["id"] == id]
-                self.track_plot.plot(current_df["x"].to_numpy(),
-                                     current_df["y"].to_numpy(),
-                                     pen=mkPen(color=colors[
-                                         hash(id) % len(colors)]))
+                if clear_existing:
+                    self.track_plot_items[id] = self.track_plot.plot(
+                        current_df["x"].to_numpy(),
+                        current_df["y"].to_numpy(),
+                        pen=mkPen(color=colors[
+                            hash(id) % len(colors)])
+                    )
+                    if self.show_labels:
+                        self.track_plot.addItem(self.track_labels[id])
+                else:
+                    self.track_plot_items[id].setData(
+                        current_df["x"].to_numpy(),
+                        current_df["y"].to_numpy()
+                    )
 
     def play_track_visualization(self, synchronize_tracks=False):
         self.track_plot.disableAutoRange()
@@ -144,12 +199,12 @@ class FrappeTrack(QtCore.QObject):
             self.refresh_plot_view(frame_range=self.frame_range,
                                    recalculate_tracks=True,
                                    synchronize_tracks=True,
-                                   clear_existing=True)
+                                   clear_existing=False)
         else:
             self.refresh_plot_view(frame_range=self.frame_range,
                                    recalculate_tracks=True,
                                    synchronize_tracks=False,
-                                   clear_existing=True)
+                                   clear_existing=False)
 
     def update_frame_rate(self):
         self.average_update_rate -= self.average_update_rate / 50
@@ -281,7 +336,7 @@ class FrappeTrack(QtCore.QObject):
                                synchronize_tracks=False,
                                frame_range=[-np.inf, np.inf],
                                reset=False,
-                               clear_existing=True)
+                               clear_existing=False)
 
     def frame_end_spinbox_changed(self, value, id):
         self.track_frame_start_spinboxes[id].setMaximum(value)
@@ -290,4 +345,4 @@ class FrappeTrack(QtCore.QObject):
                                synchronize_tracks=False,
                                frame_range=[-np.inf, np.inf],
                                reset=False,
-                               clear_existing=True)
+                               clear_existing=False)
