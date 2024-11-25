@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import optimize
+import xml.etree.cElementTree as et
 
 
 def parse_tracks(tracks_path):
@@ -9,6 +10,41 @@ def parse_tracks(tracks_path):
 
     if file_extension == "npy":
         return read_minflux_file(tracks_path)
+
+    elif file_extension == "xml":
+        return read_trackmate_file(tracks_path)
+
+
+def read_trackmate_file(trackmate_tracks_path):
+    root = et.fromstring(open(trackmate_tracks_path).read())
+    parameter_dict = root.attrib
+    track_id = 0
+
+    frames = []
+    x_vals = []
+    y_vals = []
+    z_vals = []
+    ids = []
+
+    for track in root.findall('particle'):
+        for detection in track.findall("detection"):
+            frames.append(int(detection.attrib["t"]))
+            x_vals.append(float(detection.attrib["x"]))
+            y_vals.append(float(detection.attrib["y"]))
+            z_vals.append(float(detection.attrib["z"]))
+            ids.append(track_id)
+        track_id += 1
+
+    data = pd.DataFrame({
+        "frame": frames,
+        "t": float(parameter_dict["frameInterval"]) * np.array(frames),
+        "x": x_vals,
+        "y": y_vals,
+        "z": z_vals,
+        "id": ids
+    })
+
+    return data, float(parameter_dict["frameInterval"])
 
 
 def read_minflux_file(minflux_tracks_path):

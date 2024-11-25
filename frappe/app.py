@@ -188,7 +188,8 @@ class Window(QMainWindow):
 
     @statusbar_message("Opening file...")
     def open_file_dialog(self):
-        allowed_files = ["Image files (*.czi *.czmbi)", "Track file (*.npy)"]
+        allowed_files = ["Image files (*.czi *.czmbi)",
+                         "Track file (*.npy *.xml)"]
         filename, file_type = QFileDialog.getOpenFileName(
             parent=self, caption="Open file",
             filter=";;".join(allowed_files))
